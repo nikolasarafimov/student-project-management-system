@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Projects System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <header class="bg-primary text-white shadow-sm">
+        <div class="container py-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a href="/projects" class="h3 mb-0" style="text-decoration: none">Student Project Management System</a>
+                <a href="/projects" class="text-white text-decoration-none">Home</a>
+                <a href="/projects/add-form" class="btn btn-light btn-sm" sec:authorize="hasRole('STUDENT')">Add Project</a>
+            </div>
+            <nav class="d-flex align-items-center gap-2">
+                <a href="/login" class="btn btn-light btn-sm" sec:authorize="!isAuthenticated()">Log in</a>
+                <a href="/register" class="btn btn-outline-light btn-sm" sec:authorize="!isAuthenticated()">Register</a>
+                <span class="ms-2 text-white" sec:authorize="isAuthenticated()">
+                    Hello, <strong sec:authentication="name"></strong>!
+                </span>
+                <a href="/logout" class="text-white text-decoration-none" sec:authorize="isAuthenticated()">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-fill">
+        <div class="container my-5">
+            <form th:action="@{/projects}" method="get" class="mb-4">
+                <label for="searchText" class="form-label">Search here:</label>
+                <div class="input-group">
+                    <input id="searchText" class="form-control" type="search" name="searchText" th:value="${searchText}" placeholder="Search by topic, description or label...">
+                    <div class="ms-2 d-flex">
+                        <button class="btn btn-primary me-2" type="submit">Search</button>
+                        <a class="btn btn-outline-secondary" th:href="@{/projects}">Clear</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0 table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Topic</th>
+                            <th>Description</th>
+                            <th>Course</th>
+                            <th>Responsible Teacher</th>
+                            <th>Labels</th>
+                            <th>Technologies</th>
+                            <th>Status</th>
+                            <th>Extended From</th>
+                            <th>Link</th>
+                            <th colspan="3" class="text-center" sec:authorize="isAuthenticated()">Actions</th>
+                        </tr>
+                        </thead>
+
+                        <tbody th:if="${projects != null and !#lists.isEmpty(projects)}" th:each="project : ${projects}">
+                        <tr>
+                            <td th:text="${project.id}">1</td>
+                            <td th:text="${project.topic}">Sample Topic</td>
+                            <td th:text="${project.description}">Sample description…</td>
+                            <td th:text="${project.course}">Course101</td>
+                            <td th:text="${project.responsibleTeacher?.username} ?: 'N/A'">N/A</td>
+                            <td>
+                                <ul class="mb-0">
+                                    <li th:each="lab : ${project.labels}" th:text="${lab.name}"></li>
+                                </ul>
+                            </td>
+                            <td>
+                                <ul class="mb-0">
+                                    <li th:each="tech : ${project.technologies}" th:text="${tech.technologyName}"></li>
+                                </ul>
+                            </td>
+                            <td th:text="${project.status.name()}">CREATED</td>
+                            <td th:text="${project.extendedFrom != null ? project.extendedFrom.topic + ' (ID ' + project.extendedFrom.id + ')' : 'Not Extended'}">
+                                Not Extended
+                            </td>
+                            <td>
+                                <a th:href="${project.repoLink}" th:text="${project.repoLink}" target="_blank">https://…</a>
+                            </td>
+                            <td class="actions-cell text-center" sec:authorize="isAuthenticated()">
+                                <div class="d-grid gap-2 justify-items-center" sec:authorize="hasRole('STUDENT')" th:if="${project.status.name() == 'DRAFT' or project.status.name() == 'REJECTED'}">
+                                    <a th:href="@{'/projects/edit-form/{id}' (id=${project.id})}" class="btn btn-outline-info btn-sm px-3">Edit</a>
+                                    <form th:action="@{'/projects/delete/{id}' (id=${project.id})}" method="post">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3">Delete</button>
+                                    </form>
+                                    <form th:action="@{'/projects/submit/{id}' (id=${project.id})}" method="post">
+                                        <button type="submit" class="btn btn-primary btn-sm px-3">Submit</button>
+                                    </form>
+                                </div>
+
+                                <div class="d-grid gap-2 justify-items-center"
+                                     sec:authorize="hasRole('STUDENT')"
+                                     th:if="${project.status.name() == 'SUBMITTED'}">
+                                    <form th:action="@{'/projects/cancel/{id}' (id=${project.id})}" method="post">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm px-3">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="d-grid gap-2 justify-items-center" sec:authorize="hasRole('TEACHER')" th:if="${project.status.name() == 'SUBMITTED'}">
+                                    <a th:href="@{'/projects/approve/{id}' (id=${project.id})}" class="btn btn-success btn-sm px-3">Approve</a>
+                                    <a th:href="@{'/projects/reject/{id}' (id=${project.id})}" class="btn btn-warning btn-sm px-3">Reject</a>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+
+                        <tbody th:if="${projects == null or #lists.isEmpty(projects)}">
+                            <tr>
+                                <td colspan="12" class="text-center py-4 text-muted">
+                                    No results found.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-dark text-white mt-auto py-3">
+        <div class="container text-center">
+            <small>&copy; 2025 Student Project Management System | Built with Spring Boot & Thymeleaf</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
