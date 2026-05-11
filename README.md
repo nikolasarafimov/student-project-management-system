@@ -110,3 +110,30 @@ Username: `teacher`
 Password: `teacher`
 
 Additional demo teachers and projects are also seeded.
+
+## Docker setup
+
+The application can be started with Docker Compose using the following command:
+
+```bash
+docker compose up --build
+```
+
+The Docker Compose setup includes three services:
+- Spring Boot web application
+- PostgreSQL database
+- pgAdmin database administration tool
+
+Application URL:
+```bash
+http://localhost:8080
+```
+
+pgAdmin URL:
+```bash
+http://localhost:5050
+```
+
+Default pgAdmin credentials:
+- Email: `admin@example.com`
+- Password: `admin`

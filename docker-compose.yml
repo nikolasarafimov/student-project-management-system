@@ -1,0 +1,48 @@
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: student-project-postgres
+    environment:
+      POSTGRES_DB: student_projects_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - student-project-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: student-project-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-db
+    networks:
+      - student-project-network
+
+  student-project-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: student-project-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+    networks:
+      - student-project-network
+
+volumes:
+  postgres-data:
+
+networks:
+  student-project-network:
+    driver: bridge
