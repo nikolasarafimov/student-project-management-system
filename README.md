@@ -111,29 +111,189 @@ Password: `teacher`
 
 Additional demo teachers and projects are also seeded.
 
-## Docker setup
+## DevOps Setup
 
-The application can be started with Docker Compose using the following command:
+This project was extended with a complete DevOps setup including Docker, Docker Compose, GitHub Actions CI/CD pipeline, DockerHub image publishing, and Kubernetes manifests.
+
+---
+
+## Technologies Used
+
+- Java 21
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- Thymeleaf
+- Maven
+- PostgreSQL
+- Docker
+- Docker Compose
+- GitHub Actions
+- DockerHub
+- Kubernetes
+
+---
+
+## Docker Compose Setup
+
+The application can be started locally using Docker Compose.
+
+The Docker Compose configuration contains three services:
+
+1. `student-project-app` - Spring Boot web application
+2. `postgres-db` - PostgreSQL database
+3. `pgadmin` - database administration tool
+
+Run the application with:
 
 ```bash
 docker compose up --build
 ```
 
-The Docker Compose setup includes three services:
-- Spring Boot web application
-- PostgreSQL database
-- pgAdmin database administration tool
-
 Application URL:
-```bash
-http://localhost:8080
+
+```text
+http://localhost:8080/projects
 ```
 
 pgAdmin URL:
-```bash
+
+```text
 http://localhost:5050
 ```
 
 Default pgAdmin credentials:
-- Email: `admin@example.com`
-- Password: `admin`
+
+```text
+Email: admin@example.com
+Password: admin
+```
+
+PostgreSQL connection inside pgAdmin:
+
+```text
+Host: postgres-db
+Port: 5432
+Database: student_projects_db
+Username: postgres
+Password: postgres
+```
+
+To stop the containers:
+
+```bash
+docker compose down
+```
+
+To stop the containers and remove the database volume:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## CI/CD Pipeline
+
+The project contains a GitHub Actions workflow located in:
+
+```text
+.github/workflows/ci-cd.yml
+```
+
+The pipeline is triggered on every push or pull request to the main/master branch.
+
+The pipeline performs the following steps:
+
+1. Checks out the source code
+2. Sets up Java 21
+3. Builds the Spring Boot application using Maven
+4. Logs in to DockerHub
+5. Builds a Docker image
+6. Pushes the image to DockerHub
+
+DockerHub image:
+
+```text
+nikolasarafimov/student-project-management-system:latest
+```
+
+---
+
+## Kubernetes Setup
+
+The Kubernetes manifests are located in:
+
+```text
+k8s/
+```
+
+The Kubernetes setup includes:
+
+- Namespace
+- ConfigMap for application configuration
+- Secret for database credentials
+- Deployment for the Spring Boot application
+- Service for the Spring Boot application
+- Ingress for HTTP access
+- StatefulSet for PostgreSQL
+- Service for PostgreSQL
+- PersistentVolumeClaim for PostgreSQL storage
+
+Apply all Kubernetes manifests with:
+
+```bash
+kubectl apply -k k8s
+```
+
+Check created resources:
+
+```bash
+kubectl get all -n student-project
+```
+
+Check persistent volume claim:
+
+```bash
+kubectl get pvc -n student-project
+```
+
+Check ingress:
+
+```bash
+kubectl get ingress -n student-project
+```
+
+Check application logs:
+
+```bash
+kubectl logs -n student-project deployment/student-project-app
+```
+
+Open the application locally using port-forward:
+
+```bash
+kubectl port-forward -n student-project service/student-project-service 8080:8080
+```
+
+Then open:
+
+```text
+http://localhost:8080/projects
+```
+
+Delete all Kubernetes resources:
+
+```bash
+kubectl delete namespace student-project
+```
+
+---
+
+## Project Repository
+
+GitHub repository:
+
+```text
+https://github.com/nikolasarafimov/student-project-management-system
+```
