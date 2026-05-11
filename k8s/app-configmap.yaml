@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: student-project-config
+  namespace: student-project
+data:
+  SPRING_PROFILES_ACTIVE: "k8s"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/student_projects_db"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  SPRING_JPA_SHOW_SQL: "true"
+  SPRING_SQL_INIT_MODE: "always"
+  SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION: "true"

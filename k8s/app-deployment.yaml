@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-project-app
+  namespace: student-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-project-app
+  template:
+    metadata:
+      labels:
+        app: student-project-app
+    spec:
+      containers:
+        - name: student-project-app
+          image: nikolasarafimov/student-project-management-system:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: student-project-config
+            - secretRef:
+                name: student-project-secret
