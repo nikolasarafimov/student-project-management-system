@@ -10,9 +10,4 @@ public class LoginController {
     public String home() {
         return "redirect:/projects";
     }
-
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
 }

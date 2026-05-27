@@ -40,13 +40,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+
                 .headers(headers ->
                         headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
-                                "/login",
                                 "/register",
                                 "/css/**",
                                 "/js/**",
@@ -54,8 +55,11 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/h2-console/**"
                         ).permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/projects").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/projects/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/projects/details/**").permitAll()
+
                         .requestMatchers(
                                 "/projects/add-form",
                                 "/projects/add",
@@ -65,26 +69,26 @@ public class SecurityConfig {
                                 "/projects/delete/**",
                                 "/projects/cancel/**"
                         ).hasRole("STUDENT")
+
                         .requestMatchers(
                                 "/projects/approve/**",
                                 "/projects/reject/**"
                         ).hasRole("TEACHER")
+
                         .anyRequest().authenticated()
                 )
 
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .failureUrl("/login?error=BadCredentials")
                         .defaultSuccessUrl("/projects", true)
                         .permitAll()
                 )
 
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .clearAuthentication(true)
+                        .logoutSuccessUrl("/projects")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl("/projects")
+                        .clearAuthentication(true)
                         .permitAll()
                 );
 
