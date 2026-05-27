@@ -3,6 +3,9 @@ package mk.ukim.finki.wp.seminarska.config;
 import mk.ukim.finki.wp.seminarska.service.impl.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,8 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 
 import java.util.List;
 
@@ -27,7 +28,10 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService customUserDetailsService;
 
-    public SecurityConfig(PasswordEncoder passwordEncoder, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(
+            PasswordEncoder passwordEncoder,
+            CustomUserDetailsService customUserDetailsService
+    ) {
         this.passwordEncoder = passwordEncoder;
         this.customUserDetailsService = customUserDetailsService;
     }
@@ -36,40 +40,57 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .headers((headers) -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                .headers(headers ->
+                        headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/register").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/projects").permitAll()
-
-                        .requestMatchers("/projects/add-form", "/projects/add").hasRole("STUDENT")
-                        .requestMatchers("/projects/edit-form/**", "/projects/edit/**").hasRole("STUDENT")
-                        .requestMatchers("/projects/submit/**").hasRole("STUDENT")
-                        .requestMatchers("/projects/delete/**").hasRole("STUDENT")
-                        .requestMatchers("/projects/cancel/**").hasRole("STUDENT")
-
-                        .requestMatchers("/projects/approve/**", "/projects/reject/**").hasRole("TEACHER")
-
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/register",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**",
+                                "/h2-console/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/projects").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/projects/**").permitAll()
+                        .requestMatchers(
+                                "/projects/add-form",
+                                "/projects/add",
+                                "/projects/edit-form/**",
+                                "/projects/edit/**",
+                                "/projects/submit/**",
+                                "/projects/delete/**",
+                                "/projects/cancel/**"
+                        ).hasRole("STUDENT")
+                        .requestMatchers(
+                                "/projects/approve/**",
+                                "/projects/reject/**"
+                        ).hasRole("TEACHER")
                         .anyRequest().authenticated()
                 )
+
                 .formLogin(form -> form
-                        .permitAll()
                         .loginPage("/login")
                         .failureUrl("/login?error=BadCredentials")
                         .defaultSuccessUrl("/projects", true)
+                        .permitAll()
                 )
+
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .clearAuthentication(true)
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .logoutSuccessUrl("/projects")
+                        .permitAll()
                 );
+
         return http.build();
     }
 
-    /**
-     * In-memory users for quick testing
-     */
     @Bean
     public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
         UserDetails student = User.builder()
@@ -87,9 +108,6 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(student, teacher);
     }
 
-    /**
-     * AuthenticationManager that combines in-memory and DB users
-     */
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider dbProvider = new DaoAuthenticationProvider();
