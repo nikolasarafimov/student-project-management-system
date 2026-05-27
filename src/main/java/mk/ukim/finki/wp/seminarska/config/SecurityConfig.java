@@ -53,6 +53,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .permitAll()
+                        .loginPage("/login")
                         .failureUrl("/login?error=BadCredentials")
                         .defaultSuccessUrl("/projects", true)
                 )
